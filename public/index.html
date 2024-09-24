@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Authstub Example with Qlik Engine API</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+    }
+    .main {
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="main">
+    <div id="status">Checking auth status...</div>
+  </div>
+  <script src="/node_modules/enigma.js/enigma.min.js"></script>
+  <script src="/schema.js"></script>
+  <script>
+    const config = {
+      host: '',
+      appId: '',
+      proxy: '/'
+    }
+    const session = enigma.create({
+      url: `wss://${config.host}${config.proxy}app/${config.appId}`,
+      schema
+    })
+    session.on('notification:*', (eventName, data) => {        
+      if (eventName === 'OnAuthenticationInformation') {
+        if (data.mustAuthenticate === true) {            
+          window.location = `https://${config.host}${config.proxy}/Content/default/authstub.html?redirect=http://localhost:4000`            
+        }
+        else if (data.mustAuthenticate === false) {
+          const el = document.getElementById('status')
+          if (el) {
+            el.innerHTML += '<br>User is authenticated'
+          }
+        }
+      }
+    })
+    session.open().then(qlik => {
+      qlik.openDoc(config.appId).then(app => {
+        const el = document.getElementById('status')
+          if (el) {
+            el.innerHTML += '<br>App is open'
+          }
+      })
+    })
+  </script>
+</body>
+</html>
